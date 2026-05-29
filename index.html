@@ -1,0 +1,783 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>任敏·每日任务打卡</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'PingFang SC', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f7fb;
+            padding: 20px 16px 40px;
+            color: #1e2a3e;
+        }
+
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header-card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid #eef2f8;
+        }
+
+        .title {
+            font-size: 1.7rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #c43e2c, #e67e22);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .sub {
+            font-size: 0.75rem;
+            color: #e67e22;
+            background: #fff7e6;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+
+        .update-time {
+            font-size: 0.7rem;
+            color: #8ba0b0;
+            margin-top: 10px;
+            border-top: 1px dashed #eef2f8;
+            padding-top: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 16px 0 8px;
+            gap: 12px;
+        }
+
+        .date-box {
+            background: #f1f5f9;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .progress {
+            background: #eef2ff;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .reset-btn {
+            background: #fff1f0;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #d4380d;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: #ffe7e5;
+        }
+
+        .admin-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .section {
+            background: white;
+            border-radius: 28px;
+            margin-bottom: 24px;
+            overflow: hidden;
+            border: 1px solid #edf2f7;
+        }
+
+        .section-header {
+            background: #fefaf5;
+            padding: 14px 20px;
+            border-bottom: 2px solid #fff0e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #c45b2c;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid #f0f4fa;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .task-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 2;
+            min-width: 180px;
+        }
+
+        .task-check {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #e67e22;
+        }
+
+        .task-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .task-name.completed {
+            text-decoration: line-through;
+            color: #9aaebf;
+        }
+
+        .task-link {
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            text-decoration: none;
+            color: #e67e22;
+            white-space: nowrap;
+        }
+
+        .no-link {
+            font-size: 0.7rem;
+            color: #b9c7d4;
+            padding: 4px 8px;
+        }
+
+        /* 模态框（管理员） */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: white;
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            border-radius: 32px;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .admin-task-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eef2f8;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .form-row input, .form-row select, .form-row textarea {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 30px;
+            border: 1px solid #cfdfed;
+        }
+
+        .btn-primary {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: #eef2f8;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.65rem;
+            color: #8ba0b0;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 550px) {
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .task-link {
+                margin-left: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header-card">
+        <div class="title">
+            <i class="fas fa-star" style="color:#e67e22;"></i> 任敏·每日任务打卡
+        </div>
+        <div><span class="sub">基础任务 + 按类别整理不重复</span></div>
+        <div class="stats-bar">
+            <div class="date-box" id="dateBox">2026年5月29日 星期五</div>
+            <div class="progress">已完成 <span id="completedCount">0</span> / <span id="totalCount">7</span> 项</div>
+            <button id="resetBtn" class="reset-btn"><i class="fas fa-undo-alt"></i> 重置今日</button>
+            <button id="adminBtn" class="admin-btn"><i class="fas fa-lock"></i> 管理员</button>
+        </div>
+        <div class="update-time">
+            <i class="far fa-clock"></i> 任务列表更新时间：2026年5月29日 · 每日独立打卡
+        </div>
+    </div>
+
+    <div id="tasksContainer"><div class="section">
+                        <div class="section-header"><i class="fas fa-tasks"></i><h2>盖楼与书局</h2></div><div class="task-item">
+                            <div class="task-left">
+                                <input type="checkbox" class="task-check" data-id="task1">
+                                <span class="task-name ">百度盖楼/送花</span>
+                            </div>
+                            <a href="https://tieba.baidu.com/p/10747608366" target="_blank" class="task-link" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> 链接</a>
+                         </div><div class="task-item">
+                            <div class="task-left">
+                                <input type="checkbox" class="task-check" data-id="task2">
+                                <span class="task-name ">净化</span>
+                            </div>
+                            <a href="https://weibo.com/8469374692/5303468656690617?ua=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F148.0.0.0+Safari%2F537.36+Edg%2F148.0.0.0" target="_blank" class="task-link" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> 链接</a>
+                         </div><div class="task-item">
+                            <div class="task-left">
+                                <input type="checkbox" class="task-check" data-id="task3">
+                                <span class="task-name ">盖楼</span>
+                            </div>
+                            <a href="https://weibo.com/8469374692/5303823788674432?ua=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F148.0.0.0+Safari%2F537.36+Edg%2F148.0.0.0" target="_blank" class="task-link" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> 链接</a>
+                         </div></div><div class="section">
+                        <div class="section-header"><i class="fas fa-tasks"></i><h2>签到</h2></div><div class="task-item">
+                            <div class="task-left">
+                                <input type="checkbox" class="task-check" data-id="task4">
+                                <span class="task-name ">超话签到发帖</span>
+                            </div>
+                            <a href="https://weibo.com/p/1008080acc556ec151ad31a86dd2e7af08fdc6?ua=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F148.0.0.0+Safari%2F537.36+Edg%2F148.0.0.0" target="_blank" class="task-link" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> 链接</a>
+                         </div></div><div class="section">
+                        <div class="section-header"><i class="fas fa-tasks"></i><h2>特别任务·评分与互动</h2></div><div class="task-item">
+                            <div class="task-left">
+                                <input type="checkbox" class="task-check" data-id="task5">
+                                <span class="task-name ">美锦郫县打五★</span>
+                            </div>
+                            <a href="https://sec.douban.com/c?r=https%3A%2F%2Fmovie.douban.com%2Fsubject%2F36640247%2F&amp;_s=cf4ace225d522acc8d8c686981817b0f5e64d64e07cb85dc3afdbc0969c8fad2&amp;a=1" target="_blank" class="task-link" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> 链接</a>
+                         </div><div class="task-item">
+                            <div class="task-left">
+                                <input type="checkbox" class="task-check" data-id="task6">
+                                <span class="task-name ">抖锦朝角色捧场</span>
+                            </div>
+                            <a href="https://weibo.com/8469374692/5293841310552480?ua=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F148.0.0.0+Safari%2F537.36+Edg%2F148.0.0.0" target="_blank" class="task-link" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> 链接</a>
+                         </div><div class="task-item">
+                            <div class="task-left">
+                                <input type="checkbox" class="task-check" data-id="task7">
+                                <span class="task-name ">微博演员影响力指数</span>
+                            </div>
+                            <a href="https://m.weibo.cn/c/wbox?ua=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F148.0.0.0+Safari%2F537.36+Edg%2F148.0.0.0&amp;id=9x1kw3z67s&amp;page=pages%2Fsubrank%2Factor&amp;type=0" target="_blank" class="task-link" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> 链接</a>
+                         </div></div></div>
+    <footer>⭐ 每天自动重置，点击复选框打卡。管理员可增删改任务并导出更新文件。</footer>
+</div>
+
+<!-- 管理员模态框 -->
+<div id="adminModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="display: flex; justify-content: space-between;">
+            <span><i class="fas fa-tools"></i> 任务管理后台</span>
+            <button id="closeModalBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+        </h3>
+        <div id="adminAuthArea" style="display: block;">
+            <p>输入管理员密码：</p>
+            <div style="display: flex; gap: 10px; margin: 12px 0;">
+                <input type="password" id="adminPwd" placeholder="密码" style="flex:1; padding:8px 16px; border-radius:40px; border:1px solid #ccc;">
+                <button id="verifyAdminBtn" class="btn-primary">验证</button>
+            </div>
+        </div>
+        <div id="adminPanel" style="display: none;">
+            <div class="form-row">
+                <input type="text" id="newTaskName" placeholder="任务名称 (例：超话签到)">
+                <select id="newTaskGroup">
+                    <option value="盖楼与书局">盖楼与书局</option>
+                    <option value="签到">签到</option>
+                    <option value="特别任务·评分与互动">特别任务·评分与互动</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <input type="text" id="newTaskUrl" placeholder="链接地址 (选填)">
+            </div>
+            <button id="addTaskBtn" class="btn-primary">➕ 添加任务</button>
+            <hr style="margin: 16px 0;">
+            <div id="adminTaskList"><div class="admin-task-row">
+                        <div style="flex:2; font-size:0.85rem;"><strong>百度盖楼/送花</strong><br><small>盖楼与书局</small></div>
+                        <div style="flex:1;">🔗 有链接</div>
+                        <div>
+                            <button class="edit-task" data-id="task1" style="background:#eef2ff; border:none; padding:4px 12px; border-radius:20px; margin-right:6px;">编辑</button>
+                            <button class="del-task" data-id="task1" style="background:#fee2e2; border:none; padding:4px 12px; border-radius:20px;">删除</button>
+                        </div>
+                     </div><div class="admin-task-row">
+                        <div style="flex:2; font-size:0.85rem;"><strong>净化</strong><br><small>盖楼与书局</small></div>
+                        <div style="flex:1;">🔗 有链接</div>
+                        <div>
+                            <button class="edit-task" data-id="task2" style="background:#eef2ff; border:none; padding:4px 12px; border-radius:20px; margin-right:6px;">编辑</button>
+                            <button class="del-task" data-id="task2" style="background:#fee2e2; border:none; padding:4px 12px; border-radius:20px;">删除</button>
+                        </div>
+                     </div><div class="admin-task-row">
+                        <div style="flex:2; font-size:0.85rem;"><strong>盖楼</strong><br><small>盖楼与书局</small></div>
+                        <div style="flex:1;">🔗 有链接</div>
+                        <div>
+                            <button class="edit-task" data-id="task3" style="background:#eef2ff; border:none; padding:4px 12px; border-radius:20px; margin-right:6px;">编辑</button>
+                            <button class="del-task" data-id="task3" style="background:#fee2e2; border:none; padding:4px 12px; border-radius:20px;">删除</button>
+                        </div>
+                     </div><div class="admin-task-row">
+                        <div style="flex:2; font-size:0.85rem;"><strong>超话签到发帖</strong><br><small>签到</small></div>
+                        <div style="flex:1;">🔗 有链接</div>
+                        <div>
+                            <button class="edit-task" data-id="task4" style="background:#eef2ff; border:none; padding:4px 12px; border-radius:20px; margin-right:6px;">编辑</button>
+                            <button class="del-task" data-id="task4" style="background:#fee2e2; border:none; padding:4px 12px; border-radius:20px;">删除</button>
+                        </div>
+                     </div><div class="admin-task-row">
+                        <div style="flex:2; font-size:0.85rem;"><strong>美锦郫县打五★</strong><br><small>特别任务·评分与互动</small></div>
+                        <div style="flex:1;">🔗 有链接</div>
+                        <div>
+                            <button class="edit-task" data-id="task5" style="background:#eef2ff; border:none; padding:4px 12px; border-radius:20px; margin-right:6px;">编辑</button>
+                            <button class="del-task" data-id="task5" style="background:#fee2e2; border:none; padding:4px 12px; border-radius:20px;">删除</button>
+                        </div>
+                     </div><div class="admin-task-row">
+                        <div style="flex:2; font-size:0.85rem;"><strong>抖锦朝角色捧场</strong><br><small>特别任务·评分与互动</small></div>
+                        <div style="flex:1;">🔗 有链接</div>
+                        <div>
+                            <button class="edit-task" data-id="task6" style="background:#eef2ff; border:none; padding:4px 12px; border-radius:20px; margin-right:6px;">编辑</button>
+                            <button class="del-task" data-id="task6" style="background:#fee2e2; border:none; padding:4px 12px; border-radius:20px;">删除</button>
+                        </div>
+                     </div><div class="admin-task-row">
+                        <div style="flex:2; font-size:0.85rem;"><strong>微博演员影响力指数</strong><br><small>特别任务·评分与互动</small></div>
+                        <div style="flex:1;">🔗 有链接</div>
+                        <div>
+                            <button class="edit-task" data-id="task7" style="background:#eef2ff; border:none; padding:4px 12px; border-radius:20px; margin-right:6px;">编辑</button>
+                            <button class="del-task" data-id="task7" style="background:#fee2e2; border:none; padding:4px 12px; border-radius:20px;">删除</button>
+                        </div>
+                     </div></div>
+            <hr>
+            <button id="exportHtmlBtn" class="btn-primary" style="background:#2c7da0;"><i class="fas fa-download"></i> 导出最新HTML文件</button>
+            <p style="margin-top: 12px; font-size:12px;">✅ 修改后请点击「导出」并替换原文件，所有用户才能看到新任务。</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- 任敏任务数据（共8项）----------
+    const DEFAULT_TASKS = [
+  {
+    "id": "task1",
+    "group": "盖楼与书局",
+    "name": "百度盖楼/送花",
+    "url": "https://tieba.baidu.com/p/10747608366",
+    "order": 1
+  },
+  {
+    "id": "task2",
+    "group": "盖楼与书局",
+    "name": "净化",
+    "url": "https://weibo.com/8469374692/5303468656690617?ua=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F148.0.0.0+Safari%2F537.36+Edg%2F148.0.0.0",
+    "order": 2
+  },
+  {
+    "id": "task3",
+    "group": "盖楼与书局",
+    "name": "盖楼",
+    "url": "https://weibo.com/8469374692/5303823788674432?ua=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F148.0.0.0+Safari%2F537.36+Edg%2F148.0.0.0",
+    "order": 3
+  },
+  {
+    "id": "task4",
+    "group": "签到",
+    "name": "超话签到发帖",
+    "url": "https://weibo.com/p/1008080acc556ec151ad31a86dd2e7af08fdc6?ua=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F148.0.0.0+Safari%2F537.36+Edg%2F148.0.0.0",
+    "order": 4
+  },
+  {
+    "id": "task5",
+    "group": "特别任务·评分与互动",
+    "name": "美锦郫县打五★",
+    "url": "https://sec.douban.com/c?r=https%3A%2F%2Fmovie.douban.com%2Fsubject%2F36640247%2F&_s=cf4ace225d522acc8d8c686981817b0f5e64d64e07cb85dc3afdbc0969c8fad2&a=1",
+    "order": 5
+  },
+  {
+    "id": "task6",
+    "group": "特别任务·评分与互动",
+    "name": "抖锦朝角色捧场",
+    "url": "https://weibo.com/8469374692/5293841310552480?ua=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F148.0.0.0+Safari%2F537.36+Edg%2F148.0.0.0",
+    "order": 6
+  },
+  {
+    "id": "task7",
+    "group": "特别任务·评分与互动",
+    "name": "微博演员影响力指数",
+    "url": "https://m.weibo.cn/c/wbox?ua=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F148.0.0.0+Safari%2F537.36+Edg%2F148.0.0.0&id=9x1kw3z67s&page=pages%2Fsubrank%2Factor&type=0",
+    "order": 7
+  }
+];
+
+    // 全局变量
+    let masterTasks = [];
+    let todayStr = "";
+    let userProgress = {};
+
+    // DOM
+    const tasksContainer = document.getElementById("tasksContainer");
+    const dateBox = document.getElementById("dateBox");
+    const completedCountSpan = document.getElementById("completedCount");
+    const totalCountSpan = document.getElementById("totalCount");
+    const resetBtn = document.getElementById("resetBtn");
+    const adminBtn = document.getElementById("adminBtn");
+    const adminModal = document.getElementById("adminModal");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const verifyAdminBtn = document.getElementById("verifyAdminBtn");
+    const adminPwdInput = document.getElementById("adminPwd");
+    const adminAuthArea = document.getElementById("adminAuthArea");
+    const adminPanel = document.getElementById("adminPanel");
+    const addTaskBtn = document.getElementById("addTaskBtn");
+    const exportHtmlBtn = document.getElementById("exportHtmlBtn");
+    const adminTaskListDiv = document.getElementById("adminTaskList");
+    const newTaskName = document.getElementById("newTaskName");
+    const newTaskGroup = document.getElementById("newTaskGroup");
+    const newTaskUrl = document.getElementById("newTaskUrl");
+
+    const ADMIN_PASSWORD = "admin123";
+
+    // 辅助函数
+    function getTodayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function formatDisplayDate() {
+        const d = new Date();
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 星期${weekdays[d.getDay()]}`;
+    }
+
+    // 任务主数据持久化
+    function loadMasterTasks() {
+        const stored = localStorage.getItem("renmin_task_master");
+        if (stored) {
+            try {
+                masterTasks = JSON.parse(stored);
+                if (!masterTasks.length) masterTasks = [...DEFAULT_TASKS];
+            } catch(e) { masterTasks = [...DEFAULT_TASKS]; }
+        } else {
+            masterTasks = [...DEFAULT_TASKS];
+        }
+        saveMasterTasks();
+    }
+
+    function saveMasterTasks() {
+        localStorage.setItem("renmin_task_master", JSON.stringify(masterTasks));
+    }
+
+    // 用户进度
+    function loadUserProgress() {
+        todayStr = getTodayStr();
+        const key = `renmin_progress_${todayStr}`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            try {
+                const data = JSON.parse(stored);
+                if (data.date === todayStr) userProgress = data.progress || {};
+                else userProgress = {};
+            } catch(e) { userProgress = {}; }
+        } else {
+            userProgress = {};
+        }
+        for (let task of masterTasks) {
+            if (userProgress[task.id] === undefined) userProgress[task.id] = false;
+        }
+        persistUserProgress();
+    }
+
+    function persistUserProgress() {
+        const key = `renmin_progress_${todayStr}`;
+        localStorage.setItem(key, JSON.stringify({ date: todayStr, progress: userProgress }));
+    }
+
+    function resetToday() {
+        for (let task of masterTasks) userProgress[task.id] = false;
+        persistUserProgress();
+        renderTasks();
+        updateStats();
+    }
+
+    function toggleTask(taskId, completed) {
+        if (userProgress[taskId] !== undefined) {
+            userProgress[taskId] = completed;
+            persistUserProgress();
+            renderTasks();
+            updateStats();
+        }
+    }
+
+    function renderTasks() {
+        const groupOrder = ["盖楼与书局", "签到", "特别任务·评分与互动"];
+        let html = "";
+        for (let group of groupOrder) {
+            const tasksInGroup = masterTasks.filter(t => t.group === group);
+            if (tasksInGroup.length === 0) continue;
+            html += `<div class="section">
+                        <div class="section-header"><i class="fas fa-tasks"></i><h2>${group}</h2></div>`;
+            for (let task of tasksInGroup) {
+                const completed = userProgress[task.id] || false;
+                const checkedAttr = completed ? "checked" : "";
+                const titleClass = completed ? "completed" : "";
+                const linkHtml = task.url && task.url.trim() !== ""
+                    ? `<a href="${task.url}" target="_blank" class="task-link" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> 链接</a>`
+                    : `<span class="no-link"><i class="far fa-circle"></i> 无链接</span>`;
+                html += `<div class="task-item">
+                            <div class="task-left">
+                                <input type="checkbox" class="task-check" data-id="${task.id}" ${checkedAttr}>
+                                <span class="task-name ${titleClass}">${escapeHtml(task.name)}</span>
+                            </div>
+                            ${linkHtml}
+                         </div>`;
+            }
+            html += `</div>`;
+        }
+        if (masterTasks.length === 0) html = `<div class="empty-tip">暂无任务，请联系管理员添加</div>`;
+        tasksContainer.innerHTML = html;
+
+        // 绑定复选框事件
+        document.querySelectorAll('.task-check').forEach(cb => {
+            cb.addEventListener('change', (e) => {
+                const id = cb.getAttribute('data-id');
+                toggleTask(id, cb.checked);
+            });
+        });
+    }
+
+    function updateStats() {
+        const total = masterTasks.length;
+        let completed = 0;
+        for (let task of masterTasks) if (userProgress[task.id]) completed++;
+        completedCountSpan.innerText = completed;
+        totalCountSpan.innerText = total;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function refreshUserView() {
+        for (let task of masterTasks) {
+            if (userProgress[task.id] === undefined) userProgress[task.id] = false;
+        }
+        persistUserProgress();
+        renderTasks();
+        updateStats();
+    }
+
+    // 管理员界面
+    function renderAdminList() {
+        if (!adminTaskListDiv) return;
+        if (masterTasks.length === 0) {
+            adminTaskListDiv.innerHTML = '<div class="empty-tip">暂无任务</div>';
+            return;
+        }
+        let html = '';
+        masterTasks.forEach(task => {
+            html += `<div class="admin-task-row">
+                        <div style="flex:2; font-size:0.85rem;"><strong>${escapeHtml(task.name)}</strong><br><small>${task.group}</small></div>
+                        <div style="flex:1;">${task.url ? '🔗 有链接' : '无链接'}</div>
+                        <div>
+                            <button class="edit-task" data-id="${task.id}" style="background:#eef2ff; border:none; padding:4px 12px; border-radius:20px; margin-right:6px;">编辑</button>
+                            <button class="del-task" data-id="${task.id}" style="background:#fee2e2; border:none; padding:4px 12px; border-radius:20px;">删除</button>
+                        </div>
+                     </div>`;
+        });
+        adminTaskListDiv.innerHTML = html;
+
+        document.querySelectorAll('.edit-task').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const task = masterTasks.find(t => t.id === id);
+                if (!task) return;
+                const newName = prompt("修改任务名称", task.name);
+                if (newName !== null) task.name = newName.trim() || task.name;
+                const newGroup = prompt("修改分组 (盖楼与书局/签到/特别任务·评分与互动)", task.group);
+                if (newGroup !== null && ["盖楼与书局","签到","特别任务·评分与互动"].includes(newGroup)) task.group = newGroup;
+                const newUrl = prompt("修改链接地址 (留空表示无链接)", task.url);
+                if (newUrl !== null) task.url = newUrl;
+                saveMasterTasks();
+                renderAdminList();
+                refreshUserView();
+            });
+        });
+        document.querySelectorAll('.del-task').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                if (confirm('删除后所有用户将看不到此任务，确定吗？')) {
+                    masterTasks = masterTasks.filter(t => t.id !== id);
+                    saveMasterTasks();
+                    renderAdminList();
+                    refreshUserView();
+                }
+            });
+        });
+    }
+
+    function addNewTask() {
+        const name = newTaskName.value.trim();
+        if (!name) { alert("请输入任务名称"); return; }
+        const group = newTaskGroup.value;
+        const url = newTaskUrl.value.trim();
+        const newId = `task_${Date.now()}_${Math.floor(Math.random()*10000)}`;
+        masterTasks.push({
+            id: newId,
+            group: group,
+            name: name,
+            url: url,
+            order: masterTasks.length + 1
+        });
+        saveMasterTasks();
+        renderAdminList();
+        refreshUserView();
+        newTaskName.value = "";
+        newTaskUrl.value = "";
+    }
+
+    // 导出HTML - 修复：先关闭模态框，再导出纯净版本
+    function exportFullHTML() {
+        // 确保模态框关闭
+        adminModal.classList.remove("active");
+        // 重置管理员面板显示状态（避免导出的HTML默认显示管理员面板）
+        adminAuthArea.style.display = "block";
+        adminPanel.style.display = "none";
+        adminPwdInput.value = "";
+        
+        // 生成新的HTML字符串
+        let currentHtml = document.documentElement.outerHTML;
+        // 替换 DEFAULT_TASKS 为当前 masterTasks
+        const newTasksJson = JSON.stringify(masterTasks, null, 2);
+        const regex = /const DEFAULT_TASKS = [\s\S]*?;/;
+        const updatedHtml = currentHtml.replace(regex, `const DEFAULT_TASKS = ${newTasksJson};`);
+        
+        const blob = new Blob([updatedHtml], {type: 'text/html'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `renmin_task_${getTodayStr()}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert("✅ 导出成功！请用此新文件覆盖旧文件，所有用户下次打开即可看到最新任务，且不会卡在编辑页面。");
+    }
+
+    function verifyAdmin() {
+        if (adminPwdInput.value === ADMIN_PASSWORD) {
+            adminAuthArea.style.display = "none";
+            adminPanel.style.display = "block";
+            renderAdminList();
+        } else {
+            alert("密码错误");
+        }
+    }
+
+    function closeAdminModal() {
+        adminModal.classList.remove("active");
+        adminAuthArea.style.display = "block";
+        adminPanel.style.display = "none";
+        adminPwdInput.value = "";
+    }
+
+    // 初始化页面
+    function init() {
+        loadMasterTasks();
+        loadUserProgress();
+        renderTasks();
+        updateStats();
+        dateBox.innerText = formatDisplayDate();
+
+        resetBtn.addEventListener('click', () => {
+            if (confirm("重置后将清空今日所有打卡进度，确认吗？")) resetToday();
+        });
+        adminBtn.addEventListener('click', () => adminModal.classList.add('active'));
+        closeModalBtn.addEventListener('click', closeAdminModal);
+        verifyAdminBtn.addEventListener('click', verifyAdmin);
+        addTaskBtn.addEventListener('click', addNewTask);
+        exportHtmlBtn.addEventListener('click', exportFullHTML);
+        window.addEventListener('click', (e) => { if (e.target === adminModal) closeAdminModal(); });
+    }
+
+    init();
+</script>
+
+</body></html>
